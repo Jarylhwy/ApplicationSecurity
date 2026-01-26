@@ -1,0 +1,12 @@
+.vs/
+.vscode/
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+# Rider/IDE caches
+.idea/
+# node modules
+node_modules/

@@ -3,6 +3,9 @@ using WebApplication1.Model;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Week 14 
+builder.Services.AddDataProtection();
+
 // Add services to the container.
 builder.Services.AddRazorPages();
 

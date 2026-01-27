@@ -24,5 +24,9 @@ namespace WebApplication1.Model
         [Required]
         [DataType(DataType.CreditCard)]
         public string CreditCard { get; set; }
+
+        [Required]
+        [DataType(DataType.PhoneNumber)]
+        public string PhoneNumber { get; set; }
     }
 }

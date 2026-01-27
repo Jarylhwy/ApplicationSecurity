@@ -37,7 +37,25 @@
 					<input type="Text" asp-for="RModel.CreditCard" class="form-control" />
 					<span asp-validaton-for="RModel.CreditCard" class="text-danger"></span>
 				</div>
-				@* NEW *@
+
+				<div class="mb-3">
+					<label class="form-label" asp-for="RModel.BillingAddress">BillingAddress</label>
+					<input type="Text" asp-for="RModel.BillingAddress" class="form-control" />
+					<span asp-validaton-for="RModel.BillingAddress" class="text-danger"></span>
+				</div>
+
+				<div class="mb-3">
+					<label class="form-label" asp-for="RModel.ShippingAddress">ShippingAddress</label>
+					<input type="Text" asp-for="RModel.ShippingAddress" class="form-control" />
+					<span asp-validaton-for="RModel.ShippingAddress" class="text-danger"></span>
+				</div>
+
+				<div class="mb-3">
+					<label class="form-label" asp-for="RModel.PhoneNumber">PhoneNumber</label>
+					<input type="Text" asp-for="RModel.PhoneNumber" class="form-control" />
+					<span asp-validaton-for="RModel.PhoneNumber" class="text-danger"></span>
+				</div>
+				@* password *@
 
 				<div class="mb-3">
 					<label class="form-label" asp-for="RModel.Password">Password</label>

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -28,15 +29,19 @@ namespace WebApplication1.Pages
         {
             if (ModelState.IsValid)
             {
+                var dataProtectionProvider = DataProtectionProvider.Create("EncryptData");
+                var protector = dataProtectionProvider.CreateProtector("MySecretKey");
+
                 var user = new ApplicationUser()
                 {
                     UserName = RModel.Email,
                     Email = RModel.Email,
                     FirstName = RModel.FirstName,
                     LastName = RModel.LastName,
-                    CreditCard = RModel.CreditCard,
-                    BillingAddress = RModel.BillingAddress,
-                    ShippingAddress = RModel.ShippingAddress
+                    CreditCard = string.IsNullOrEmpty(RModel.CreditCard) ? string.Empty : protector.Protect(RModel.CreditCard),
+                    BillingAddress = RModel.BillingAddress ?? string.Empty,
+                    ShippingAddress = RModel.ShippingAddress ?? string.Empty,
+                    PhoneNumber = RModel.PhoneNumber ?? string.Empty
                     //TODO
                 };
                 var result = await userManager.CreateAsync(user, RModel.Password); if (result.Succeeded)

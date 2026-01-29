@@ -11,7 +11,14 @@ builder.Services.AddDataProtection();
 builder.Services.AddRazorPages();
 
 builder.Services.AddDbContext<AuthDbContext>();
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<AuthDbContext>();
+// Configure Identity with lockout settings
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+{
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+    options.Lockout.MaxFailedAccessAttempts = 3;
+    options.Lockout.AllowedForNewUsers = true;
+})
+.AddEntityFrameworkStores<AuthDbContext>();
 
 // Session and in-memory cache for session state
 builder.Services.AddDistributedMemoryCache();

@@ -40,6 +40,9 @@
                         else
                         {
                             <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-page="/Account/Login">Login</a>
+                            </li>
+                            <li class="nav-item">
                                 <a class="nav-link text-dark" asp-area="" asp-page="/Register">Register</a>
                             </li>
                         }
@@ -73,7 +76,7 @@
                 clearTimeout(timeoutId);
                 timeoutId = setTimeout(function() {
                     // Redirect to login page after timeout
-                    window.location.href = '/Identity/Account/Login';
+                    window.location.href = '/Account/Login';
                 }, sessionTimeoutMs);
             }
             ['click','mousemove','keydown','scroll','touchstart'].forEach(function(evt) { document.addEventListener(evt, reset); });

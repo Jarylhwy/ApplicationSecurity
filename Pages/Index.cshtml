@@ -8,3 +8,29 @@
     <h1 class="display-4">Welcome</h1>
     <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
 </div>
+
+@if (Model.IsAuthenticated)
+{
+    <div class="container mt-4">
+        <h2>Your profile</h2>
+        <dl class="row">
+            <dt class="col-sm-3">Email</dt>
+            <dd class="col-sm-9">@Model.Email</dd>
+
+            <dt class="col-sm-3">Name</dt>
+            <dd class="col-sm-9">@Model.FirstName @Model.LastName</dd>
+
+            <dt class="col-sm-3">Phone</dt>
+            <dd class="col-sm-9">@Model.PhoneNumber</dd>
+
+            <dt class="col-sm-3">Billing Address</dt>
+            <dd class="col-sm-9">@Model.BillingAddress</dd>
+
+            <dt class="col-sm-3">Shipping Address</dt>
+            <dd class="col-sm-9">@Model.ShippingAddress</dd>
+
+            <dt class="col-sm-3">Credit Card</dt>
+            <dd class="col-sm-9">@Model.CreditCard</dd>
+        </dl>
+    </div>
+}

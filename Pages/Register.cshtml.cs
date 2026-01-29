@@ -11,13 +11,15 @@ namespace WebApplication1.Pages
     {
         private UserManager<ApplicationUser> userManager { get; }
         private SignInManager<ApplicationUser> signInManager { get; }
+        private readonly IDataProtector _protector;
 
         [BindProperty]
         public Register RModel { get; set; }
 
-        public RegisterModel(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager)
+        public RegisterModel(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IDataProtectionProvider dataProtectionProvider)
         {
             this.userManager = userManager; this.signInManager = signInManager;
+            _protector = dataProtectionProvider.CreateProtector("BookwormsOnline.UserData");
         }
 
         public void OnGet()
@@ -29,18 +31,15 @@ namespace WebApplication1.Pages
         {
             if (ModelState.IsValid)
             {
-                var dataProtectionProvider = DataProtectionProvider.Create("EncryptData");
-                var protector = dataProtectionProvider.CreateProtector("MySecretKey");
-
                 var user = new ApplicationUser()
                 {
                     UserName = RModel.Email,
                     Email = RModel.Email,
                     FirstName = RModel.FirstName,
                     LastName = RModel.LastName,
-                    CreditCard = string.IsNullOrEmpty(RModel.CreditCard) ? string.Empty : protector.Protect(RModel.CreditCard),
-                    BillingAddress = RModel.BillingAddress ?? string.Empty,
-                    ShippingAddress = RModel.ShippingAddress ?? string.Empty,
+                    CreditCard = string.IsNullOrEmpty(RModel.CreditCard) ? string.Empty : _protector.Protect(RModel.CreditCard),
+                    BillingAddress = string.IsNullOrEmpty(RModel.BillingAddress) ? string.Empty : _protector.Protect(RModel.BillingAddress),
+                    ShippingAddress = string.IsNullOrEmpty(RModel.ShippingAddress) ? string.Empty : _protector.Protect(RModel.ShippingAddress),
                     PhoneNumber = RModel.PhoneNumber ?? string.Empty
                     //TODO
                 };

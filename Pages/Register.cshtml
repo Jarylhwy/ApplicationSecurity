@@ -83,10 +83,10 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 
-    <script src="https://www.google.com/recaptcha/api.js?render=YOUR_SITE_KEY"></script>
+    <script src="https://www.google.com/recaptcha/api.js?render=6Lf84lksAAAAABm98gkv_-gkbJ1Wk4FFS0UODKa0"></script>
     <script>
         grecaptcha.ready(function () {
-            grecaptcha.execute('YOUR_SITE_KEY', { action: 'register' }).then(function (token) {
+            grecaptcha.execute('6Lf84lksAAAAABm98gkv_-gkbJ1Wk4FFS0UODKa0', { action: 'register' }).then(function (token) {
                 var el = document.getElementById('g-recaptcha-response');
                 if (el) el.value = token;
             });

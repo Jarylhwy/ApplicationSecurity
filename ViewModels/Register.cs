@@ -8,7 +8,9 @@ namespace WebApplication1.ViewModels
         [DataType(DataType.EmailAddress)] public string Email { get; set; }
 
         [Required]
-        [DataType(DataType.Password)] public string Password { get; set; }
+        [DataType(DataType.Password)]
+        [RegularExpression("^(?=.{12,}$)(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).*$", ErrorMessage = "Password must be at least 12 characters and include upper-case, lower-case, number and special character.")]
+        public string Password { get; set; }
 
         [Required]
         [DataType(DataType.Password)]

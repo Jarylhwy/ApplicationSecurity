@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using WebApplication1.Model;
 using WebApplication1.Middleware;
+using WebApplication1.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +21,9 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 })
 .AddEntityFrameworkStores<AuthDbContext>();
 
+// Recaptcha service
+builder.Services.AddHttpClient<RecaptchaService>();
+
 // Session and in-memory cache for session state
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
@@ -28,6 +32,9 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
+
+// Bind recaptcha config section (user should set Recaptcha:Secret in appsettings)
+builder.Configuration.GetSection("Recaptcha");
 
 var app = builder.Build();
 

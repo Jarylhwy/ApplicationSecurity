@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using WebApplication1.Model;
 using WebApplication1.ViewModels;
+using WebApplication1.Services;
 
 namespace WebApplication1.Pages
 {
@@ -12,14 +13,16 @@ namespace WebApplication1.Pages
         private UserManager<ApplicationUser> userManager { get; }
         private SignInManager<ApplicationUser> signInManager { get; }
         private readonly IDataProtector _protector;
+        private readonly RecaptchaService _recaptcha;
 
         [BindProperty]
         public Register RModel { get; set; }
 
-        public RegisterModel(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IDataProtectionProvider dataProtectionProvider)
+        public RegisterModel(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IDataProtectionProvider dataProtectionProvider, RecaptchaService recaptcha)
         {
             this.userManager = userManager; this.signInManager = signInManager;
             _protector = dataProtectionProvider.CreateProtector("BookwormsOnline.UserData");
+            _recaptcha = recaptcha;
         }
 
         public void OnGet()
@@ -29,6 +32,14 @@ namespace WebApplication1.Pages
         //Save data into the database
         public async Task<IActionResult> OnPostAsync()
         {
+            var token = Request.Form["g-recaptcha-response"].ToString();
+            var ok = await _recaptcha.ValidateAsync(token, "register", 0.5);
+            if (!ok)
+            {
+                ModelState.AddModelError("", "reCAPTCHA validation failed.");
+                return Page();
+            }
+
             if (ModelState.IsValid)
             {
                 var sessionId = Guid.NewGuid().ToString();

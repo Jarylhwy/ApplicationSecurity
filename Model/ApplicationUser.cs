@@ -28,5 +28,8 @@ namespace WebApplication1.Model
         [Required]
         [DataType(DataType.PhoneNumber)]
         public string PhoneNumber { get; set; }
+
+        // Session tracking: store current active session id (GUID). Updated on login.
+        public string? SessionId { get; set; }
     }
 }

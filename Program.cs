@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using WebApplication1.Model;
+using WebApplication1.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +12,15 @@ builder.Services.AddRazorPages();
 
 builder.Services.AddDbContext<AuthDbContext>();
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<AuthDbContext>();
+
+// Session and in-memory cache for session state
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30); // server-side session timeout
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
 
 var app = builder.Build();
 
@@ -27,7 +37,13 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+// Enable session before authentication so session is available during auth checks
+app.UseSession();
+
 app.UseAuthentication();
+
+// Session validation to detect multiple logins
+app.UseMiddleware<SessionValidationMiddleware>();
 
 app.UseAuthorization();
 

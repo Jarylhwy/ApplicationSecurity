@@ -31,6 +31,8 @@ namespace WebApplication1.Pages
         {
             if (ModelState.IsValid)
             {
+                var sessionId = Guid.NewGuid().ToString();
+
                 var user = new ApplicationUser()
                 {
                     UserName = RModel.Email,
@@ -40,12 +42,18 @@ namespace WebApplication1.Pages
                     CreditCard = string.IsNullOrEmpty(RModel.CreditCard) ? string.Empty : _protector.Protect(RModel.CreditCard),
                     BillingAddress = string.IsNullOrEmpty(RModel.BillingAddress) ? string.Empty : _protector.Protect(RModel.BillingAddress),
                     ShippingAddress = string.IsNullOrEmpty(RModel.ShippingAddress) ? string.Empty : _protector.Protect(RModel.ShippingAddress),
-                    PhoneNumber = RModel.PhoneNumber ?? string.Empty
-                    //TODO
+                    PhoneNumber = RModel.PhoneNumber ?? string.Empty,
+                    SessionId = sessionId
                 };
                 var result = await userManager.CreateAsync(user, RModel.Password); if (result.Succeeded)
                 {
-                    await signInManager.SignInAsync(user, false); return RedirectToPage("Index");
+                    // Sign the user in and set a cookie/session
+                    await signInManager.SignInAsync(user, false);
+
+                    // Store session id in server-side session as well
+                    HttpContext.Session.SetString("SessionId", sessionId);
+
+                    return RedirectToPage("Index");
                 }
                 foreach (var error in result.Errors)
                 {

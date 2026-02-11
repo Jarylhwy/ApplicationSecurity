@@ -35,5 +35,8 @@ namespace WebApplication1.Model
 
         // Session tracking: store current active session id (GUID). Updated on login.
         public string? SessionId { get; set; }
+
+        // Track when the password was last changed
+        public DateTime? LastPasswordChangedAt { get; set; }
     }
 }

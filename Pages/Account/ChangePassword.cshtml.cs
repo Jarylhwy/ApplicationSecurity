@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using WebApplication1.Model;
 
 namespace WebApplication1.Pages.Account
@@ -13,12 +14,14 @@ namespace WebApplication1.Pages.Account
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly AuthDbContext _db;
+        private readonly IConfiguration _config;
 
-        public ChangePasswordModel(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, AuthDbContext db)
+        public ChangePasswordModel(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, AuthDbContext db, IConfiguration config)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _db = db;
+            _config = config;
         }
 
         [BindProperty]
@@ -49,6 +52,18 @@ namespace WebApplication1.Pages.Account
             if (user == null)
             {
                 return RedirectToPage("/Account/Login");
+            }
+
+            // Enforce minimum password age: cannot change within X minutes of last change
+            var minAgeMinutes = _config.GetValue<int?>("PasswordPolicy:MinPasswordAgeMinutes") ?? 5;
+            if (user.LastPasswordChangedAt.HasValue)
+            {
+                var since = DateTime.UtcNow - user.LastPasswordChangedAt.Value;
+                if (since.TotalMinutes < minAgeMinutes)
+                {
+                    ModelState.AddModelError("", $"You cannot change your password within {minAgeMinutes} minutes of the last change.");
+                    return Page();
+                }
             }
 
             // Verify current password
@@ -92,6 +107,10 @@ namespace WebApplication1.Pages.Account
                 _db.PasswordHistories.RemoveRange(remove);
             }
             await _db.SaveChangesAsync();
+
+            // Update last password changed timestamp
+            user.LastPasswordChangedAt = DateTime.UtcNow;
+            await _userManager.UpdateAsync(user);
 
             await _signInManager.RefreshSignInAsync(user);
 

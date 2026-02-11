@@ -192,6 +192,10 @@ namespace WebApplication1.Pages
 
                 await _db.SaveChangesAsync();
 
+                // Set last password change timestamp
+                user.LastPasswordChangedAt = DateTime.UtcNow;
+                await userManager.UpdateAsync(user);
+
                 // Sign the user in and set a cookie/session
                 await signInManager.SignInAsync(user, false);
 

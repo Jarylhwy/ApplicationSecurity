@@ -19,6 +19,14 @@
     {
         <p>An unexpected status code was returned: @Model.StatusCode</p>
     }
+    @if (Model.StatusCode == 500)
+    {
+        <p>An internal server error occurred. Please try again later.</p>
+    }
+    @if (Model.StatusCode == 400)
+    {
+        <p>Bad request. Please check your input and try again.</p>
+    }
 
     <div class="mt-3">
         <a class="btn btn-secondary" href="/">Return home</a>

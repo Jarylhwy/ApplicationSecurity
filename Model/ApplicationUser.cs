@@ -29,6 +29,10 @@ namespace WebApplication1.Model
         [DataType(DataType.PhoneNumber)]
         public string PhoneNumber { get; set; }
 
+        // Photo upload - store file path
+        [DataType(DataType.Text)]
+        public string? PhotoPath { get; set; }
+
         // Session tracking: store current active session id (GUID). Updated on login.
         public string? SessionId { get; set; }
     }

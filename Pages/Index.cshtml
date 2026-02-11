@@ -5,14 +5,30 @@
 }
 
 <div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    <h1 class="display-4">Welcome to Bookworms Online</h1>
 </div>
 
 @if (Model.IsAuthenticated)
 {
     <div class="container mt-4">
-        <h2>Your profile</h2>
+        <h2>Your Profile</h2>
+
+        <!-- Display Photo -->
+        @if (!string.IsNullOrEmpty(Model.PhotoPath))
+        {
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <dt>Profile Photo</dt>
+                    <dd>
+                        <img src="/uploads/@Model.PhotoPath"
+                             alt="Profile Photo"
+                             class="img-thumbnail"
+                             style="max-width: 200px; max-height: 200px;" />
+                    </dd>
+                </div>
+            </div>
+        }
+
         <dl class="row">
             <dt class="col-sm-3">Email</dt>
             <dd class="col-sm-9">@Model.Email</dd>

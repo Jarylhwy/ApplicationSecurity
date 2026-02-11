@@ -4,68 +4,91 @@
 }
 
 <div class="container mt-5">
-
     <div class="row justify-content-center align-items-center">
+        <div class="col-sm-12 col-md-12 col-lg-6">
+            <h1 class="mb-3">Register for Bookworms Online</h1>
 
-        <div class="col-sm-12 col-md-12 col-lg-4">
-            <h1 class="mb-3">Register </h1>
-
-            <form method="post">
+            <form method="post" enctype="multipart/form-data">
                 <div asp-validation-summary="All" class="text-danger"></div>
 
                 <input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response" />
 
+                <!-- Email -->
                 <div class="mb-3">
                     <label class="form-label" asp-for="RModel.Email">Email Address</label>
                     <input type="email" asp-for="RModel.Email" class="form-control" />
                     <span asp-validation-for="RModel.Email" class="text-danger"></span>
                 </div>
 
-                @* NEW *@
+                <!-- Profile Photo -->
                 <div class="mb-3">
-                    <label class="form-label" asp-for="RModel.FirstName">FirstName</label>
+                    <label class="form-label" asp-for="RModel.Photo">Profile Photo (.JPG only)</label>
+                    <input type="file" asp-for="RModel.Photo" class="form-control" accept=".jpg,.jpeg" />
+                    <div class="form-text">Maximum size: 5MB. Only JPG/JPEG files allowed.</div>
+                    <span asp-validation-for="RModel.Photo" class="text-danger"></span>
+                </div>
+
+                <!-- First Name -->
+                <div class="mb-3">
+                    <label class="form-label" asp-for="RModel.FirstName">First Name</label>
                     <input type="text" asp-for="RModel.FirstName" class="form-control" />
                     <span asp-validation-for="RModel.FirstName" class="text-danger"></span>
                 </div>
 
+                <!-- Last Name -->
                 <div class="mb-3">
-                    <label class="form-label" asp-for="RModel.LastName">LastName</label>
+                    <label class="form-label" asp-for="RModel.LastName">Last Name</label>
                     <input type="text" asp-for="RModel.LastName" class="form-control" />
                     <span asp-validation-for="RModel.LastName" class="text-danger"></span>
                 </div>
 
+                <!-- Credit Card -->
                 <div class="mb-3">
-                    <label class="form-label" asp-for="RModel.CreditCard">Credit Card</label>
-                    <input type="text" asp-for="RModel.CreditCard" class="form-control" />
+                    <label class="form-label" asp-for="RModel.CreditCard">Credit Card Number</label>
+                    <input type="text" asp-for="RModel.CreditCard" class="form-control" placeholder="1234567890123456" />
+                    <div class="form-text">16-digit credit card number. This will be encrypted for security.</div>
                     <span asp-validation-for="RModel.CreditCard" class="text-danger"></span>
                 </div>
 
+                <!-- Billing Address -->
                 <div class="mb-3">
-                    <label class="form-label" asp-for="RModel.BillingAddress">BillingAddress</label>
-                    <input type="text" asp-for="RModel.BillingAddress" class="form-control" />
+                    <label class="form-label" asp-for="RModel.BillingAddress">Billing Address</label>
+                    <input type="text" asp-for="RModel.BillingAddress" class="form-control" placeholder="Full billing address" />
                     <span asp-validation-for="RModel.BillingAddress" class="text-danger"></span>
                 </div>
 
+                <!-- Shipping Address -->
                 <div class="mb-3">
-                    <label class="form-label" asp-for="RModel.ShippingAddress">ShippingAddress</label>
-                    <input type="text" asp-for="RModel.ShippingAddress" class="form-control" />
+                    <label class="form-label" asp-for="RModel.ShippingAddress">Shipping Address</label>
+                    <input type="text" asp-for="RModel.ShippingAddress" class="form-control" placeholder="Full shipping address" />
                     <span asp-validation-for="RModel.ShippingAddress" class="text-danger"></span>
                 </div>
 
+                <!-- Phone Number -->
                 <div class="mb-3">
-                    <label class="form-label" asp-for="RModel.PhoneNumber">PhoneNumber</label>
-                    <input type="tel" asp-for="RModel.PhoneNumber" class="form-control" />
+                    <label class="form-label" asp-for="RModel.PhoneNumber">Phone Number</label>
+                    <input type="tel" asp-for="RModel.PhoneNumber" class="form-control" placeholder="+65 1234 5678" />
                     <span asp-validation-for="RModel.PhoneNumber" class="text-danger"></span>
                 </div>
-                @* password *@
 
+                <!-- Password -->
                 <div class="mb-3">
                     <label class="form-label" asp-for="RModel.Password">Password</label>
                     <input type="password" id="password" asp-for="RModel.Password" class="form-control" />
                     <div id="passwordHelp" class="form-text"></div>
+                    <div class="form-text">
+                        <small>Password must be at least 12 characters and include:</small>
+                        <ul class="mb-0">
+                            <li>Uppercase letters (A-Z)</li>
+                            <li>Lowercase letters (a-z)</li>
+                            <li>Numbers (0-9)</li>
+                            <li>Special characters (!@@#$%^&* etc.)</li>
+                        </ul>
+                    </div>
                     <span asp-validation-for="RModel.Password" class="text-danger"></span>
                 </div>
 
+                <!-- Confirm Password -->
                 <div class="mb-3">
                     <label class="form-label" asp-for="RModel.ConfirmPassword">Confirm Password</label>
                     <input type="password" asp-for="RModel.ConfirmPassword" class="form-control" />
@@ -73,7 +96,11 @@
                 </div>
 
                 <div class="mb-3">
-                    <button type="submit" class="btn btn-primary">Register</button>
+                    <button type="submit" class="btn btn-primary btn-lg w-100">Register</button>
+                </div>
+
+                <div class="text-center">
+                    <p class="text-muted">Already have an account? <a href="/Account/Login">Login here</a></p>
                 </div>
             </form>
         </div>
@@ -83,6 +110,7 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 
+    <!-- Google reCAPTCHA v3 -->
     <script src="https://www.google.com/recaptcha/api.js?render=6Lf84lksAAAAABm98gkv_-gkbJ1Wk4FFS0UODKa0"></script>
     <script>
         grecaptcha.ready(function () {
@@ -93,6 +121,7 @@
         });
     </script>
 
+    <!-- Password Strength Meter -->
     <script>
         (function () {
             var password = document.getElementById('password');
@@ -111,20 +140,35 @@
             }
 
             function labelForScore(s) {
-                if (s >= 6) return 'STRONG';
-                if (s >= 4) return 'Good';
-                if (s >= 2) return 'Weak';
-                return 'Very weak';
+                if (s >= 6) return 'STRONG ✓';
+                if (s >= 4) return 'GOOD';
+                if (s >= 2) return 'WEAK';
+                return 'VERY WEAK';
             }
 
-            password.addEventListener('input', function (e) {
-                var s = score(e.target.value);
-                help.textContent = 'Password strength: ' + labelForScore(s);
-                help.className = 'form-text';
-                if (s >= 6) help.classList.add('text-success');
-                else if (s >= 4) help.classList.add('text-warning');
-                else help.classList.add('text-danger');
-            });
+            function updatePasswordStrength() {
+                var s = score(password.value);
+                var label = labelForScore(s);
+                help.textContent = 'Password strength: ' + label;
+                help.className = 'form-text fw-bold';
+
+                // Remove all color classes first
+                help.classList.remove('text-success', 'text-warning', 'text-danger');
+
+                // Add appropriate color class
+                if (s >= 6) {
+                    help.classList.add('text-success');
+                } else if (s >= 4) {
+                    help.classList.add('text-warning');
+                } else {
+                    help.classList.add('text-danger');
+                }
+            }
+
+            password.addEventListener('input', updatePasswordStrength);
+
+            // Initialize on page load
+            updatePasswordStrength();
         })();
     </script>
 }

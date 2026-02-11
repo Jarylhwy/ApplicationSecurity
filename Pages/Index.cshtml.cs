@@ -27,6 +27,7 @@ namespace WebApplication1.Pages
         public string ShippingAddress { get; private set; } = string.Empty;
         public string CreditCard { get; private set; } = string.Empty;
         public string PhoneNumber { get; private set; } = string.Empty;
+        public string? PhotoPath { get; private set; } // Add this
 
         public async Task OnGetAsync()
         {
@@ -38,7 +39,9 @@ namespace WebApplication1.Pages
 
             Email = user.Email ?? string.Empty;
             PhoneNumber = user.PhoneNumber ?? string.Empty;
-            // Decrypt protected fields. If unprotect fails, fall back to raw value.
+            PhotoPath = user.PhotoPath; // Get photo path
+
+            // Decrypt protected fields
             try
             {
                 FirstName = TryUnprotect(user.FirstName);
@@ -49,7 +52,6 @@ namespace WebApplication1.Pages
             }
             catch (Exception ex)
             {
-                // Log and fallback to stored values
                 _logger.LogWarning(ex, "Failed to unprotect some user data for user {UserId}", user.Id);
                 FirstName = user.FirstName ?? string.Empty;
                 LastName = user.LastName ?? string.Empty;
@@ -68,7 +70,6 @@ namespace WebApplication1.Pages
             }
             catch
             {
-                // If it isn't protected or unprotect fails, return the original
                 return protectedOrPlain;
             }
         }

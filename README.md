@@ -4,7 +4,8 @@ appsec hints:
 3. make sure set minimum password complexity
 4. ensure cannot put scripts or special characters in relevant fields eg. first name etc
 all the duration things put 1 mins ish
+
 When register account:
-credit card: 5375677774780278
+credit card: 4012001037141112
 number: +4488303550
 password: P@ssw0rd1234

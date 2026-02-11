@@ -9,6 +9,7 @@
             <h1 class="mb-3">Register for Bookworms Online</h1>
 
             <form method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
                 <div asp-validation-summary="All" class="text-danger"></div>
 
                 <input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response" />

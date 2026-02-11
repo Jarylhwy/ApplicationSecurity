@@ -10,3 +10,4 @@ obj/
 .idea/
 # node modules
 node_modules/
+/wwwroot/uploads

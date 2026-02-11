@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
-using WebApplication1.Model;
+using Microsoft.AspNetCore.Mvc;
 using WebApplication1.Middleware;
+using WebApplication1.Model;
 using WebApplication1.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,7 +10,11 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDataProtection();
 
 // Add services to the container.
-builder.Services.AddRazorPages();
+builder.Services.AddRazorPages(options =>
+{
+    // Validate antiforgery tokens for unsafe methods (POST/PUT/DELETE)
+    options.Conventions.ConfigureFilter(new AutoValidateAntiforgeryTokenAttribute());
+});
 
 builder.Services.AddDbContext<AuthDbContext>();
 // Configure Identity with lockout settings

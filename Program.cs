@@ -17,11 +17,14 @@ builder.Services.AddRazorPages(options =>
 });
 
 builder.Services.AddDbContext<AuthDbContext>();
-// Configure Identity with lockout settings
+// Configure Identity with lockout settings (make minutes configurable via appsettings)
+var lockoutMinutes = builder.Configuration.GetValue<int?>("Identity:LockoutMinutes") ?? 1;
+var maxFailedAttempts = builder.Configuration.GetValue<int?>("Identity:MaxFailedAccessAttempts") ?? 3;
+
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
-    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
-    options.Lockout.MaxFailedAccessAttempts = 3;
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(lockoutMinutes);
+    options.Lockout.MaxFailedAccessAttempts = maxFailedAttempts;
     options.Lockout.AllowedForNewUsers = true;
 })
 .AddEntityFrameworkStores<AuthDbContext>();

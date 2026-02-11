@@ -24,6 +24,8 @@ namespace WebApplication1.Pages.Account
         [BindProperty]
         public string Password { get; set; }
 
+        public string? LockoutMessage { get; set; }
+
         public IActionResult OnGet()
         {
             return Page();
@@ -34,8 +36,8 @@ namespace WebApplication1.Pages.Account
             var user = await _userManager.FindByEmailAsync(Email);
             if (user == null)
             {
-                // log failed attempt
-                _db.AuditLogs.Add(new AuditLog { UserId = null, Action = "LoginFailed", Timestamp = DateTime.UtcNow, Details = $"Unknown email {Email}" });
+                // log failed attempt — database requires a non-null UserId, use a placeholder
+                _db.AuditLogs.Add(new AuditLog { UserId = "Unknown", Action = "LoginFailed", Timestamp = DateTime.UtcNow, Details = $"Unknown email {Email}" });
                 await _db.SaveChangesAsync();
                 ModelState.AddModelError("", "Invalid login attempt.");
                 return Page();
@@ -61,7 +63,27 @@ namespace WebApplication1.Pages.Account
             {
                 _db.AuditLogs.Add(new AuditLog { UserId = user.Id, Action = "AccountLocked", Timestamp = DateTime.UtcNow, Details = null });
                 await _db.SaveChangesAsync();
-                ModelState.AddModelError("", "Account locked. Try again later.");
+
+                // Compute remaining lockout time
+                var lockoutEnd = await _userManager.GetLockoutEndDateAsync(user);
+                if (lockoutEnd.HasValue)
+                {
+                    var remaining = lockoutEnd.Value.UtcDateTime - DateTime.UtcNow;
+                    if (remaining.TotalSeconds > 0)
+                    {
+                        LockoutMessage = $"Account locked. It will automatically recover in {remaining.Minutes} minutes and {remaining.Seconds} seconds.";
+                    }
+                    else
+                    {
+                        LockoutMessage = "Account locked. Please try again later.";
+                    }
+                }
+                else
+                {
+                    LockoutMessage = "Account locked. Please try again later.";
+                }
+
+                ModelState.AddModelError("", LockoutMessage);
                 return Page();
             }
 

@@ -10,6 +10,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using WebApplication1.Utilities;
 using System.Text.Encodings.Web;
+using Microsoft.EntityFrameworkCore;
 
 namespace WebApplication1.Pages
 {
@@ -20,6 +21,7 @@ namespace WebApplication1.Pages
         private readonly IDataProtector _protector;
         private readonly RecaptchaService _recaptcha;
         private readonly IWebHostEnvironment _environment;
+        private readonly AuthDbContext _db;
 
         [BindProperty]
         public Register RModel { get; set; }
@@ -28,13 +30,15 @@ namespace WebApplication1.Pages
                            SignInManager<ApplicationUser> signInManager,
                            IDataProtectionProvider dataProtectionProvider,
                            RecaptchaService recaptcha,
-                           IWebHostEnvironment environment)
+                           IWebHostEnvironment environment,
+                           AuthDbContext db)
         {
             this.userManager = userManager;
             this.signInManager = signInManager;
             _protector = dataProtectionProvider.CreateProtector("BookwormsOnline.UserData");
             _recaptcha = recaptcha;
             _environment = environment;
+            _db = db;
         }
 
         public void OnGet()
@@ -174,6 +178,20 @@ namespace WebApplication1.Pages
 
             if (result.Succeeded)
             {
+                // Store password hash in history (keep max 2 recent entries)
+                var hash = userManager.PasswordHasher.HashPassword(user, RModel.Password);
+                _db.PasswordHistories.Add(new PasswordHistory { UserId = user.Id, HashedPassword = hash, Timestamp = DateTime.UtcNow });
+
+                // trim older entries to keep only last 2
+                var histories = await _db.PasswordHistories.Where(p => p.UserId == user.Id).OrderByDescending(p => p.Timestamp).ToListAsync();
+                if (histories.Count > 2)
+                {
+                    var toRemove = histories.Skip(2).ToList();
+                    _db.PasswordHistories.RemoveRange(toRemove);
+                }
+
+                await _db.SaveChangesAsync();
+
                 // Sign the user in and set a cookie/session
                 await signInManager.SignInAsync(user, false);
 

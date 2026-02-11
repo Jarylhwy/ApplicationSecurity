@@ -15,6 +15,7 @@ namespace WebApplication1.Model
         }
 
         public DbSet<AuditLog> AuditLogs { get; set; }
+        public DbSet<PasswordHistory> PasswordHistories { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

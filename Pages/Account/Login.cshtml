@@ -21,6 +21,10 @@
                     <input asp-for="Password" type="password" class="form-control" />
                 </div>
 
+                <div class="mb-3">
+                    <a asp-page="/Account/ForgotPassword" class="btn btn-link">Forgot your password?</a>
+                </div>
+
                 @if (!string.IsNullOrEmpty(Model.LockoutMessage))
                 {
                     <div class="alert alert-warning">@Model.LockoutMessage</div>

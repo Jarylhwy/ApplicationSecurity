@@ -27,10 +27,14 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     options.Lockout.MaxFailedAccessAttempts = maxFailedAttempts;
     options.Lockout.AllowedForNewUsers = true;
 })
-.AddEntityFrameworkStores<AuthDbContext>();
+.AddEntityFrameworkStores<AuthDbContext>()
+.AddDefaultTokenProviders();
 
 // Recaptcha service
 builder.Services.AddHttpClient<RecaptchaService>();
+
+// Register email sender (SMTP) - configuration must be present in appsettings
+builder.Services.AddSingleton<IEmailSender, SmtpEmailSender>();
 
 // Session and in-memory cache for session state
 builder.Services.AddDistributedMemoryCache();

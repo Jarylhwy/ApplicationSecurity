@@ -9,6 +9,7 @@ using WebApplication1.Validations;
 using System.IO;
 using System.Text.RegularExpressions;
 using WebApplication1.Utilities;
+using System.Text.Encodings.Web;
 
 namespace WebApplication1.Pages
 {
@@ -149,15 +150,21 @@ namespace WebApplication1.Pages
 
             var sessionId = Guid.NewGuid().ToString();
 
+            // HTML-encode sanitized values before storing to DB
+            var encodedFirstName = HtmlEncoder.Default.Encode(RModel.FirstName ?? string.Empty);
+            var encodedLastName = HtmlEncoder.Default.Encode(RModel.LastName ?? string.Empty);
+            var encodedBilling = HtmlEncoder.Default.Encode(RModel.BillingAddress ?? string.Empty);
+            var encodedShipping = HtmlEncoder.Default.Encode(RModel.ShippingAddress ?? string.Empty);
+
             var user = new ApplicationUser()
             {
                 UserName = RModel.Email,
                 Email = RModel.Email,
-                FirstName = RModel.FirstName,
-                LastName = RModel.LastName,
+                FirstName = encodedFirstName,
+                LastName = encodedLastName,
                 CreditCard = string.IsNullOrEmpty(RModel.CreditCard) ? string.Empty : _protector.Protect(RModel.CreditCard),
-                BillingAddress = string.IsNullOrEmpty(RModel.BillingAddress) ? string.Empty : _protector.Protect(RModel.BillingAddress),
-                ShippingAddress = string.IsNullOrEmpty(RModel.ShippingAddress) ? string.Empty : _protector.Protect(RModel.ShippingAddress),
+                BillingAddress = string.IsNullOrEmpty(encodedBilling) ? string.Empty : _protector.Protect(encodedBilling),
+                ShippingAddress = string.IsNullOrEmpty(encodedShipping) ? string.Empty : _protector.Protect(encodedShipping),
                 PhoneNumber = RModel.PhoneNumber ?? string.Empty,
                 PhotoPath = photoFileName, // Store filename
                 SessionId = sessionId

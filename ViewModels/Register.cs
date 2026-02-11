@@ -7,6 +7,8 @@ namespace WebApplication1.ViewModels
     public class Register
     {
         [Required]
+        [EmailAddress]
+        [StringLength(256, ErrorMessage = "Email must be at most 256 characters.")]
         [DataType(DataType.EmailAddress)]
         public string Email { get; set; }
 
@@ -23,26 +25,32 @@ namespace WebApplication1.ViewModels
 
         [Required]
         [DataType(DataType.Text)]
+        [StringLength(50, ErrorMessage = "First name must be at most 50 characters.")]
         public string FirstName { get; set; }
 
         [Required]
         [DataType(DataType.Text)]
+        [StringLength(50, ErrorMessage = "Last name must be at most 50 characters.")]
         public string LastName { get; set; }
 
         [Required]
         [DataType(DataType.CreditCard)]
+        [RegularExpression("^\\d{16}$", ErrorMessage = "Credit card must be exactly 16 digits.")]
         public string CreditCard { get; set; }
 
         [Required]
         [DataType(DataType.Text)]
+        [StringLength(250, ErrorMessage = "Billing address must be at most 250 characters.")]
         public string BillingAddress { get; set; }
 
         [Required]
         [DataType(DataType.Text)]
+        [StringLength(250, ErrorMessage = "Shipping address must be at most 250 characters.")]
         public string ShippingAddress { get; set; }
 
         [Required]
         [DataType(DataType.PhoneNumber)]
+        [Phone(ErrorMessage = "Please enter a valid phone number.")]
         public string PhoneNumber { get; set; }
 
         // Photo upload - for Bookworms Online (similar to Fresh Farm Market)

@@ -7,6 +7,8 @@ using WebApplication1.ViewModels;
 using WebApplication1.Services;
 using WebApplication1.Validations;
 using System.IO;
+using System.Text.RegularExpressions;
+using WebApplication1.Utilities;
 
 namespace WebApplication1.Pages
 {
@@ -48,93 +50,166 @@ namespace WebApplication1.Pages
                 return Page();
             }
 
-            if (ModelState.IsValid)
+            // Basic server-side normalization
+            if (RModel != null)
             {
-                string photoFileName = null;
+                RModel.Email = RModel.Email?.Trim();
 
-                // Handle photo upload
-                if (RModel.Photo != null && RModel.Photo.Length > 0)
+                // Sanitize inputs to remove HTML/script tags but keep readable text
+                RModel.FirstName = InputSanitizer.Sanitize(RModel.FirstName?.Trim());
+                RModel.LastName = InputSanitizer.Sanitize(RModel.LastName?.Trim());
+
+                RModel.BillingAddress = InputSanitizer.Sanitize(RModel.BillingAddress?.Trim());
+                RModel.ShippingAddress = InputSanitizer.Sanitize(RModel.ShippingAddress?.Trim());
+
+                RModel.PhoneNumber = RModel.PhoneNumber?.Trim();
+                RModel.CreditCard = RModel.CreditCard?.Replace(" ", "").Trim();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return Page();
+            }
+
+            // Additional server-side validation
+            if (!string.IsNullOrEmpty(RModel?.PhoneNumber) && !IsValidPhone(RModel.PhoneNumber))
+            {
+                ModelState.AddModelError("RModel.PhoneNumber", "Please enter a valid phone number (e.g. +6512345678).");
+                return Page();
+            }
+
+            if (!string.IsNullOrEmpty(RModel?.CreditCard) && !Regex.IsMatch(RModel.CreditCard, "^\\d{16}$"))
+            {
+                ModelState.AddModelError("RModel.CreditCard", "Credit card must be exactly 16 digits.");
+                return Page();
+            }
+
+            if (!string.IsNullOrEmpty(RModel?.CreditCard) && !IsValidLuhn(RModel.CreditCard))
+            {
+                ModelState.AddModelError("RModel.CreditCard", "Credit card number is invalid.");
+                return Page();
+            }
+
+            string photoFileName = null;
+
+            // Handle photo upload
+            if (RModel.Photo != null && RModel.Photo.Length > 0)
+            {
+                // Validate file extension (server-side double-check)
+                var allowedExtensions = new[] { ".jpg", ".jpeg" };
+                var extension = Path.GetExtension(RModel.Photo.FileName).ToLowerInvariant();
+
+                if (!allowedExtensions.Contains(extension))
                 {
-                    // Validate file extension (server-side double-check)
-                    var allowedExtensions = new[] { ".jpg", ".jpeg" };
-                    var extension = Path.GetExtension(RModel.Photo.FileName).ToLowerInvariant();
-
-                    if (!allowedExtensions.Contains(extension))
-                    {
-                        ModelState.AddModelError("RModel.Photo", "Only JPG/JPEG files are allowed.");
-                        return Page();
-                    }
-
-                    // Validate file size (server-side double-check)
-                    if (RModel.Photo.Length > 5 * 1024 * 1024) // 5MB
-                    {
-                        ModelState.AddModelError("RModel.Photo", "File size must be less than 5MB.");
-                        return Page();
-                    }
-
-                    // Create unique filename to prevent overwriting and path traversal
-                    var uniqueFileName = Guid.NewGuid().ToString() + extension;
-
-                    // Create uploads directory if it doesn't exist
-                    var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads");
-                    if (!Directory.Exists(uploadsFolder))
-                    {
-                        Directory.CreateDirectory(uploadsFolder);
-                    }
-
-                    // Secure file path
-                    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                    // Save file
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await RModel.Photo.CopyToAsync(stream);
-                    }
-
-                    photoFileName = uniqueFileName;
-                }
-                else
-                {
-                    ModelState.AddModelError("RModel.Photo", "Please upload a profile photo.");
+                    ModelState.AddModelError("RModel.Photo", "Only JPG/JPEG files are allowed.");
                     return Page();
                 }
 
-                var sessionId = Guid.NewGuid().ToString();
-
-                var user = new ApplicationUser()
+                // Validate file size (server-side double-check)
+                if (RModel.Photo.Length > 5 * 1024 * 1024) // 5MB
                 {
-                    UserName = RModel.Email,
-                    Email = RModel.Email,
-                    FirstName = RModel.FirstName,
-                    LastName = RModel.LastName,
-                    CreditCard = string.IsNullOrEmpty(RModel.CreditCard) ? string.Empty : _protector.Protect(RModel.CreditCard),
-                    BillingAddress = string.IsNullOrEmpty(RModel.BillingAddress) ? string.Empty : _protector.Protect(RModel.BillingAddress),
-                    ShippingAddress = string.IsNullOrEmpty(RModel.ShippingAddress) ? string.Empty : _protector.Protect(RModel.ShippingAddress),
-                    PhoneNumber = RModel.PhoneNumber ?? string.Empty,
-                    PhotoPath = photoFileName, // Store filename
-                    SessionId = sessionId
-                };
-
-                var result = await userManager.CreateAsync(user, RModel.Password);
-
-                if (result.Succeeded)
-                {
-                    // Sign the user in and set a cookie/session
-                    await signInManager.SignInAsync(user, false);
-
-                    // Store session id in server-side session as well
-                    HttpContext.Session.SetString("SessionId", sessionId);
-
-                    return RedirectToPage("Index");
+                    ModelState.AddModelError("RModel.Photo", "File size must be less than 5MB.");
+                    return Page();
                 }
 
-                foreach (var error in result.Errors)
+                // Validate content type
+                var allowedContentTypes = new[] { "image/jpeg", "image/jpg" };
+                if (!allowedContentTypes.Contains(RModel.Photo.ContentType?.ToLowerInvariant()))
                 {
-                    ModelState.AddModelError("", error.Description);
+                    ModelState.AddModelError("RModel.Photo", "Uploaded file content type is not valid.");
+                    return Page();
                 }
+
+                // Create unique filename to prevent overwriting and path traversal
+                var uniqueFileName = Guid.NewGuid().ToString() + extension;
+
+                // Create uploads directory if it doesn't exist
+                var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads");
+                if (!Directory.Exists(uploadsFolder))
+                {
+                    Directory.CreateDirectory(uploadsFolder);
+                }
+
+                // Secure file path
+                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                // Save file
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await RModel.Photo.CopyToAsync(stream);
+                }
+
+                photoFileName = uniqueFileName;
+            }
+            else
+            {
+                ModelState.AddModelError("RModel.Photo", "Please upload a profile photo.");
+                return Page();
+            }
+
+            var sessionId = Guid.NewGuid().ToString();
+
+            var user = new ApplicationUser()
+            {
+                UserName = RModel.Email,
+                Email = RModel.Email,
+                FirstName = RModel.FirstName,
+                LastName = RModel.LastName,
+                CreditCard = string.IsNullOrEmpty(RModel.CreditCard) ? string.Empty : _protector.Protect(RModel.CreditCard),
+                BillingAddress = string.IsNullOrEmpty(RModel.BillingAddress) ? string.Empty : _protector.Protect(RModel.BillingAddress),
+                ShippingAddress = string.IsNullOrEmpty(RModel.ShippingAddress) ? string.Empty : _protector.Protect(RModel.ShippingAddress),
+                PhoneNumber = RModel.PhoneNumber ?? string.Empty,
+                PhotoPath = photoFileName, // Store filename
+                SessionId = sessionId
+            };
+
+            var result = await userManager.CreateAsync(user, RModel.Password);
+
+            if (result.Succeeded)
+            {
+                // Sign the user in and set a cookie/session
+                await signInManager.SignInAsync(user, false);
+
+                // Store session id in server-side session as well
+                HttpContext.Session.SetString("SessionId", sessionId);
+
+                return RedirectToPage("Index");
+            }
+
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError("", error.Description);
             }
 
             return Page();
+        }
+
+        private bool IsValidPhone(string phone)
+        {
+            // Basic E.164-ish validation: optional + and 7-15 digits
+            if (string.IsNullOrEmpty(phone)) return false;
+            return Regex.IsMatch(phone, "^\\+?\\d{7,15}$");
+        }
+
+        private bool IsValidLuhn(string number)
+        {
+            if (string.IsNullOrEmpty(number)) return false;
+            int sum = 0;
+            bool alternate = false;
+            for (int i = number.Length - 1; i >= 0; i--)
+            {
+                char c = number[i];
+                if (c < '0' || c > '9') return false;
+                int n = c - '0';
+                if (alternate)
+                {
+                    n *= 2;
+                    if (n > 9) n -= 9;
+                }
+                sum += n;
+                alternate = !alternate;
+            }
+            return (sum % 10 == 0);
         }
     }
 }

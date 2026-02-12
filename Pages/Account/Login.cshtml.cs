@@ -43,7 +43,8 @@ namespace WebApplication1.Pages.Account
                 return Page();
             }
 
-            var result = await _signInManager.PasswordSignInAsync(user, Password, isPersistent: false, lockoutOnFailure: true);
+            // Use the user's UserName when signing in so Identity finds the correct account
+            var result = await _signInManager.PasswordSignInAsync(user.UserName, Password, isPersistent: false, lockoutOnFailure: true);
 
             if (result.Succeeded)
             {
@@ -57,6 +58,13 @@ namespace WebApplication1.Pages.Account
                 await _db.SaveChangesAsync();
 
                 return RedirectToPage("/Index");
+            }
+
+            if (result.RequiresTwoFactor)
+            {
+                // PasswordSignInAsync already sets up the 2FA cookie automatically
+                // Just redirect to TwoFactor page
+                return RedirectToPage("/Account/TwoFactor");
             }
 
             if (result.IsLockedOut)

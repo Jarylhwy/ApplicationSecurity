@@ -26,9 +26,21 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(lockoutMinutes);
     options.Lockout.MaxFailedAccessAttempts = maxFailedAttempts;
     options.Lockout.AllowedForNewUsers = true;
+
+    // Allow using 2FA providers
+    options.Tokens.AuthenticatorTokenProvider = TokenOptions.DefaultAuthenticatorProvider;
+    options.Tokens.EmailConfirmationTokenProvider = "Email"; // THIS WAS MISSING
 })
 .AddEntityFrameworkStores<AuthDbContext>()
-.AddDefaultTokenProviders();
+.AddDefaultTokenProviders()
+// register an explicit email token provider named "Email" to be used for 2FA via email
+.AddTokenProvider<EmailTokenProvider<ApplicationUser>>("Email");
+
+// Configure token lifespans (useful for password reset and authenticator tokens)
+builder.Services.Configure<DataProtectionTokenProviderOptions>(opt =>
+{
+    opt.TokenLifespan = TimeSpan.FromMinutes(10);
+});
 
 // Recaptcha service
 builder.Services.AddHttpClient<RecaptchaService>();

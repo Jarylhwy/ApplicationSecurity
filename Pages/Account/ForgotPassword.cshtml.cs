@@ -24,8 +24,6 @@ namespace WebApplication1.Pages.Account
         [BindProperty]
         public InputModel Input { get; set; }
 
-        public string DebugResetLink { get; set; }
-
         public class InputModel
         {
             [Required]
@@ -55,12 +53,6 @@ namespace WebApplication1.Pages.Account
             var callback = Url.Page("/Account/ResetPassword", null, new { userId = user.Id, token }, Request.Scheme);
 
             await _emailSender.SendEmailAsync(Input.Email, "Reset your password", $"Please reset your password by <a href=\"{callback}\">clicking here</a>.");
-
-            // Development helper: if running in Development and SMTP is local, expose link on confirmation page
-            if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
-            {
-                TempData["ResetLink"] = callback;
-            }
 
             return RedirectToPage("/Account/ForgotPasswordConfirmation");
         }

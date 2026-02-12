@@ -11,3 +11,6 @@ obj/
 # node modules
 node_modules/
 /wwwroot/uploads
+
+appsettings.json
+appsettings.Development.json

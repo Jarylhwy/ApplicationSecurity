@@ -46,7 +46,8 @@
                 <!-- Credit Card -->
                 <div class="mb-3">
                     <label class="form-label" asp-for="RModel.CreditCard">Credit Card Number</label>
-                    <input type="text" asp-for="RModel.CreditCard" class="form-control" placeholder="1234567890123456" />
+                    <input type="text" asp-for="RModel.CreditCard" class="form-control" placeholder="1234567890123456"
+                           oninput="this.value = this.value.replace(/[^0-9]/g, '')" maxlength="16" />
                     <div class="form-text">16-digit credit card number. This will be encrypted for security.</div>
                     <span asp-validation-for="RModel.CreditCard" class="text-danger"></span>
                 </div>
@@ -68,7 +69,8 @@
                 <!-- Phone Number -->
                 <div class="mb-3">
                     <label class="form-label" asp-for="RModel.PhoneNumber">Phone Number</label>
-                    <input type="tel" asp-for="RModel.PhoneNumber" class="form-control" placeholder="+65 1234 5678" />
+                    <input type="tel" asp-for="RModel.PhoneNumber" class="form-control" placeholder="+65 1234 5678"
+                           oninput="this.value = this.value.replace(/[^0-9+]/g, '')" />
                     <span asp-validation-for="RModel.PhoneNumber" class="text-danger"></span>
                 </div>
 

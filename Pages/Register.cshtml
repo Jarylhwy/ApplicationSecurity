@@ -32,17 +32,38 @@
                 <!-- First Name -->
                 <div class="mb-3">
                     <label class="form-label" asp-for="RModel.FirstName">First Name</label>
-                    <input type="text" asp-for="RModel.FirstName" class="form-control" />
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-person"></i></span>
+                        <input type="text"
+                               asp-for="RModel.FirstName"
+                               class="form-control"
+                               placeholder="Enter your first name"
+                               pattern="^[A-Za-z\s\-']+$"
+                               title="First name can only contain letters, spaces, hyphens (-), and apostrophes (')"
+                               oninput="this.value = this.value.replace(/[^A-Za-z\s\-']/g, '')"
+                               maxlength="50"
+                               required />
+                    </div>
                     <span asp-validation-for="RModel.FirstName" class="text-danger"></span>
                 </div>
 
-                <!-- Last Name -->
+                <!-- Last Name - STRICT: Only letters, spaces, hyphens, apostrophes -->
                 <div class="mb-3">
                     <label class="form-label" asp-for="RModel.LastName">Last Name</label>
-                    <input type="text" asp-for="RModel.LastName" class="form-control" />
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-person"></i></span>
+                        <input type="text"
+                               asp-for="RModel.LastName"
+                               class="form-control"
+                               placeholder="Enter your last name"
+                               pattern="^[A-Za-z\s\-']+$"
+                               title="Last name can only contain letters, spaces, hyphens (-), and apostrophes (')"
+                               oninput="this.value = this.value.replace(/[^A-Za-z\s\-']/g, '')"
+                               maxlength="50"
+                               required />
+                    </div>
                     <span asp-validation-for="RModel.LastName" class="text-danger"></span>
                 </div>
-
                 <!-- Credit Card -->
                 <div class="mb-3">
                     <label class="form-label" asp-for="RModel.CreditCard">Credit Card Number</label>

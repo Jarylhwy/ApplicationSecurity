@@ -1,37 +1,105 @@
 @page
 @model WebApplication1.Pages.Account.LoginModel
 @{
+    ViewData["Title"] = "Login";
 }
 
 <div class="container mt-5">
     <div class="row justify-content-center">
-        <div class="col-md-6">
-            <h2>Login</h2>
-            <form method="post">
-                @Html.AntiForgeryToken()
-
-                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
-                <div class="mb-3">
-                    <label asp-for="Email" class="form-label">Email</label>
-                    <input asp-for="Email" class="form-control" />
-                </div>
-                <div class="mb-3">
-                    <label asp-for="Password" class="form-label">Password</label>
-                    <input asp-for="Password" type="password" class="form-control" />
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white text-center py-3">
+                    <h3 class="mb-0"><i class="bi bi-box-arrow-in-right"></i> Login</h3>
                 </div>
 
-                <div class="mb-3">
-                    <a asp-page="/Account/ForgotPassword" class="btn btn-link">Forgot your password?</a>
+                <div class="card-body p-4">
+                    @if (Request.Query["expired"] == "true")
+                    {
+                        <div class="alert alert-danger">
+                            <div class="d-flex">
+                                <div class="flex-shrink-0">
+                                    <i class="bi bi-exclamation-triangle-fill fs-4"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h5 class="alert-heading">Password Expired!</h5>
+                                    <p class="mb-0">Your password has expired. Please login and you will be redirected to change it.</p>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    @if (Request.Query["changed"] == "true")
+                    {
+                        <div class="alert alert-success">
+                            <i class="bi bi-check-circle-fill"></i>
+                            Password changed successfully! Please login with your new password.
+                        </div>
+                    }
+
+                    @if (Request.Query["expiredSession"] == "true")
+                    {
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle-fill"></i>
+                            Your session has ended. Please login again.
+                        </div>
+                    }
+
+                    @if (TempData["PasswordChanged"] != null)
+                    {
+                        <div class="alert alert-success">
+                            <i class="bi bi-check-circle-fill"></i>
+                            @TempData["PasswordChanged"]
+                        </div>
+                    }
+
+                    <form method="post">
+                        @Html.AntiForgeryToken()
+
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label fw-bold">Email Address</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                <input asp-for="Email" class="form-control" placeholder="Enter your email" />
+                            </div>
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Password" class="form-label fw-bold">Password</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                                <input asp-for="Password" type="password" class="form-control" placeholder="Enter your password" />
+                            </div>
+                            <span asp-validation-for="Password" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <a asp-page="/Account/ForgotPassword" class="text-decoration-none">Forgot your password?</a>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(Model.LockoutMessage))
+                        {
+                            <div class="alert alert-danger">
+                                <i class="bi bi-shield-lock"></i> @Model.LockoutMessage
+                            </div>
+                        }
+
+                        <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">
+                            <i class="bi bi-box-arrow-in-right"></i> Login
+                        </button>
+                    </form>
                 </div>
 
-                @if (!string.IsNullOrEmpty(Model.LockoutMessage))
-                {
-                    <div class="alert alert-warning">@Model.LockoutMessage</div>
-                }
-
-                <button type="submit" class="btn btn-primary">Login</button>
-            </form>
+                <div class="card-footer bg-light text-center py-3">
+                    <p class="mb-0">Don't have an account? <a href="/Register" class="text-decoration-none">Register here</a></p>
+                </div>
+            </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -16,7 +16,11 @@ namespace WebApplication1.Pages.Account
         private readonly AuthDbContext _db;
         private readonly IConfiguration _config;
 
-        public ChangePasswordModel(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, AuthDbContext db, IConfiguration config)
+        public ChangePasswordModel(
+            UserManager<ApplicationUser> userManager,
+            SignInManager<ApplicationUser> signInManager,
+            AuthDbContext db,
+            IConfiguration config)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -28,6 +32,12 @@ namespace WebApplication1.Pages.Account
         public InputModel Input { get; set; }
 
         public string StatusMessage { get; set; }
+        public bool IsPasswordExpired { get; set; }
+        public string ExpiryMessage { get; set; }
+        public double MinAgeMinutes { get; set; } = 1;
+        public DateTime? LastPasswordChange { get; set; }
+        public double MinutesSinceLastChange { get; set; }
+        public bool CanChangePassword { get; set; } = true;
 
         public class InputModel
         {
@@ -36,9 +46,46 @@ namespace WebApplication1.Pages.Account
             public string ConfirmPassword { get; set; }
         }
 
-        public async Task OnGetAsync()
+        public async Task<IActionResult> OnGetAsync(bool expired = false)
         {
-            // nothing
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return RedirectToPage("/Account/Login");
+            }
+
+            IsPasswordExpired = expired || HttpContext.Session.GetString("PasswordExpired") == "true";
+            MinAgeMinutes = _config.GetValue<double?>("PasswordPolicy:MinPasswordAgeMinutes") ?? 1;
+            LastPasswordChange = user.LastPasswordChangedAt;
+
+            if (IsPasswordExpired)
+            {
+                ExpiryMessage = "Your password has expired. You must change it now to continue.";
+                ViewData["Title"] = "Change Expired Password";
+                CanChangePassword = true;
+            }
+            else
+            {
+                ViewData["Title"] = "Change Password";
+
+                if (LastPasswordChange.HasValue)
+                {
+                    MinutesSinceLastChange = (DateTime.UtcNow - LastPasswordChange.Value).TotalMinutes;
+
+                    if (MinutesSinceLastChange < MinAgeMinutes)
+                    {
+                        CanChangePassword = false;
+                        var timeRemaining = MinAgeMinutes - MinutesSinceLastChange;
+                        ViewData["MinAgeWarning"] = $"?? Please wait {timeRemaining:F1} more minutes before changing your password again.";
+                    }
+                    else
+                    {
+                        CanChangePassword = true;
+                    }
+                }
+            }
+
+            return Page();
         }
 
         public async Task<IActionResult> OnPostAsync()
@@ -54,15 +101,22 @@ namespace WebApplication1.Pages.Account
                 return RedirectToPage("/Account/Login");
             }
 
-            // Enforce minimum password age: cannot change within X minutes of last change
-            var minAgeMinutes = _config.GetValue<int?>("PasswordPolicy:MinPasswordAgeMinutes") ?? 5;
-            if (user.LastPasswordChangedAt.HasValue)
+            IsPasswordExpired = HttpContext.Session.GetString("PasswordExpired") == "true" ||
+                                Request.Query["expired"] == "true";
+
+            // Minimum password age check - only if not expired
+            if (!IsPasswordExpired)
             {
-                var since = DateTime.UtcNow - user.LastPasswordChangedAt.Value;
-                if (since.TotalMinutes < minAgeMinutes)
+                var minAgeMinutes = _config.GetValue<double?>("PasswordPolicy:MinPasswordAgeMinutes") ?? 1;
+                if (user.LastPasswordChangedAt.HasValue)
                 {
-                    ModelState.AddModelError("", $"You cannot change your password within {minAgeMinutes} minutes of the last change.");
-                    return Page();
+                    var since = DateTime.UtcNow - user.LastPasswordChangedAt.Value;
+                    if (since.TotalMinutes < minAgeMinutes)
+                    {
+                        var timeRemaining = minAgeMinutes - since.TotalMinutes;
+                        ModelState.AddModelError("", $"Please wait {timeRemaining:F1} more minutes before changing your password.");
+                        return Page();
+                    }
                 }
             }
 
@@ -75,7 +129,12 @@ namespace WebApplication1.Pages.Account
             }
 
             // Prevent reuse of last 2 passwords
-            var lastTwo = await _db.PasswordHistories.Where(p => p.UserId == user.Id).OrderByDescending(p => p.Timestamp).Take(2).ToListAsync();
+            var lastTwo = await _db.PasswordHistories
+                .Where(p => p.UserId == user.Id)
+                .OrderByDescending(p => p.Timestamp)
+                .Take(2)
+                .ToListAsync();
+
             foreach (var h in lastTwo)
             {
                 var res = _userManager.PasswordHasher.VerifyHashedPassword(user, h.HashedPassword, Input.NewPassword);
@@ -97,10 +156,21 @@ namespace WebApplication1.Pages.Account
                 return Page();
             }
 
-            // Add new password hash to history and trim to 2
+            // Add new password hash to history
             var newHash = _userManager.PasswordHasher.HashPassword(user, Input.NewPassword);
-            _db.PasswordHistories.Add(new PasswordHistory { UserId = user.Id, HashedPassword = newHash, Timestamp = DateTime.UtcNow });
-            var all = await _db.PasswordHistories.Where(p => p.UserId == user.Id).OrderByDescending(p => p.Timestamp).ToListAsync();
+            _db.PasswordHistories.Add(new PasswordHistory
+            {
+                UserId = user.Id,
+                HashedPassword = newHash,
+                Timestamp = DateTime.UtcNow
+            });
+
+            // Trim history to 2 entries
+            var all = await _db.PasswordHistories
+                .Where(p => p.UserId == user.Id)
+                .OrderByDescending(p => p.Timestamp)
+                .ToListAsync();
+
             if (all.Count > 2)
             {
                 var remove = all.Skip(2).ToList();
@@ -110,12 +180,31 @@ namespace WebApplication1.Pages.Account
 
             // Update last password changed timestamp
             user.LastPasswordChangedAt = DateTime.UtcNow;
-            await _userManager.UpdateAsync(user);
 
+            // Generate new session ID but KEEP USER SIGNED IN
+            var newSessionId = Guid.NewGuid().ToString();
+            user.SessionId = newSessionId;
+            await _userManager.UpdateAsync(user);
+            HttpContext.Session.SetString("SessionId", newSessionId);
+
+            // Clear password expiration flags
+            HttpContext.Session.Remove("PasswordExpired");
+            HttpContext.Session.Remove("PasswordExpiryMessage");
+            HttpContext.Session.Remove("PasswordExpiryWarning");
+
+            // Refresh sign-in - keeps user logged in
             await _signInManager.RefreshSignInAsync(user);
 
-            StatusMessage = "Your password has been changed.";
-            return Page();
+            if (IsPasswordExpired)
+            {
+                TempData["SuccessMessage"] = "Your expired password has been changed successfully!";
+                return RedirectToPage("/Index");
+            }
+            else
+            {
+                StatusMessage = "Your password has been changed successfully.";
+                return Page();
+            }
         }
     }
 }

@@ -10,43 +10,141 @@
 
 @if (Model.IsAuthenticated)
 {
-    <div class="container mt-4">
-        <h2>Your Profile</h2>
+    <!-- PASSWORD EXPIRY BANNER - Shows at top of profile -->
+    @if (Model.IsPasswordExpiringSoon)
+    {
+        <div class="container mt-3">
+            <div class="alert alert-@Model.ExpiryColor alert-dismissible fade show shadow" role="alert">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <i class="bi bi-exclamation-triangle-fill fs-3 me-2"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <strong>@Model.ExpiryMessage</strong>
+                        @if (Model.MinutesRemaining > 0)
+                        {
+                            <span class="ms-2">Time remaining:</span>
+                            <span class="badge bg-light text-dark ms-1" id="minutesRemaining">@Model.MinutesRemaining</span>
+                            <span class="badge bg-light text-dark ms-1" id="secondsRemaining">00</span>
+                        }
+                    </div>
+                    <div class="flex-shrink-0 ms-3">
+                        <a href="/Account/ChangePassword" class="btn btn-sm btn-@Model.ExpiryColor">
+                            <i class="bi bi-key"></i> Change Password
+                        </a>
+                    </div>
+                </div>
 
-        <!-- Display Photo -->
-        @if (!string.IsNullOrEmpty(Model.PhotoPath))
-        {
-            <div class="row mb-4">
-                <div class="col-md-3">
-                    <dt>Profile Photo</dt>
-                    <dd>
-                        <img src="/uploads/@Model.PhotoPath"
-                             alt="Profile Photo"
-                             class="img-thumbnail"
-                             style="max-width: 200px; max-height: 200px;" />
-                    </dd>
+                <!-- Progress Bar -->
+                <div class="progress mt-2" style="height: 8px;">
+                    <div id="expiryProgressBar"
+                         class="progress-bar bg-@Model.ExpiryColor progress-bar-striped progress-bar-animated"
+                         role="progressbar"
+                         style="width: @Model.ExpiryPercentage%;"
+                         aria-valuenow="@Model.ExpiryPercentage"
+                         aria-valuemin="0"
+                         aria-valuemax="100">
+                    </div>
+                </div>
+
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        </div>
+    }
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="mb-0"><i class="bi bi-person-circle"></i> Your Profile</h3>
+                    </div>
+                    <div class="card-body">
+                        <!-- Display Photo -->
+                        @if (!string.IsNullOrEmpty(Model.PhotoPath))
+                        {
+                            <div class="row mb-4">
+                                <div class="col-md-12">
+                                    <div class="text-center">
+                                        <img src="/uploads/@Model.PhotoPath"
+                                             alt="Profile Photo"
+                                             class="img-thumbnail rounded-circle"
+                                             style="width: 150px; height: 150px; object-fit: cover;" />
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        <dl class="row">
+                            <dt class="col-sm-3">Email</dt>
+                            <dd class="col-sm-9">@Model.Email</dd>
+
+                            <dt class="col-sm-3">Name</dt>
+                            <dd class="col-sm-9">@Model.FirstName @Model.LastName</dd>
+
+                            <dt class="col-sm-3">Phone</dt>
+                            <dd class="col-sm-9">@Model.PhoneNumber</dd>
+
+                            <dt class="col-sm-3">Billing Address</dt>
+                            <dd class="col-sm-9">@Model.BillingAddress</dd>
+
+                            <dt class="col-sm-3">Shipping Address</dt>
+                            <dd class="col-sm-9">@Model.ShippingAddress</dd>
+
+                            <dt class="col-sm-3">Credit Card</dt>
+                            <dd class="col-sm-9">
+                                <span class="font-monospace">@Model.CreditCard</span>
+                            </dd>
+                        </dl>
+                    </div>
                 </div>
             </div>
-        }
-
-        <dl class="row">
-            <dt class="col-sm-3">Email</dt>
-            <dd class="col-sm-9">@Model.Email</dd>
-
-            <dt class="col-sm-3">Name</dt>
-            <dd class="col-sm-9">@Model.FirstName @Model.LastName</dd>
-
-            <dt class="col-sm-3">Phone</dt>
-            <dd class="col-sm-9">@Model.PhoneNumber</dd>
-
-            <dt class="col-sm-3">Billing Address</dt>
-            <dd class="col-sm-9">@Model.BillingAddress</dd>
-
-            <dt class="col-sm-3">Shipping Address</dt>
-            <dd class="col-sm-9">@Model.ShippingAddress</dd>
-
-            <dt class="col-sm-3">Credit Card</dt>
-            <dd class="col-sm-9">@Model.CreditCard</dd>
-        </dl>
+        </div>
     </div>
+}
+
+@section Scripts {
+    @if (Model.IsPasswordExpiringSoon && Model.MinutesRemaining > 0)
+    {
+        <script>
+            (function() {
+                let minutes = @Model.MinutesRemaining;
+                let seconds = 0;
+                const totalMinutes = 2; // Max password age
+
+                const minutesEl = document.getElementById('minutesRemaining');
+                const secondsEl = document.getElementById('secondsRemaining');
+                const progressBar = document.getElementById('expiryProgressBar');
+
+                function updateCountdown() {
+                    seconds--;
+
+                    if (seconds < 0) {
+                        minutes -= 0.1;
+                        seconds = 59;
+                    }
+
+                    if (minutes <= 0 && seconds <= 0) {
+                        // Password expired - reload page
+                        location.reload();
+                    } else {
+                        const mins = Math.floor(minutes);
+                        const secs = seconds;
+                        const totalMinutesRemaining = minutes + (seconds / 60);
+                        const percentRemaining = (totalMinutesRemaining / totalMinutes) * 100;
+
+                        if (minutesEl) minutesEl.textContent = `${mins}.${Math.floor(seconds / 6)}m`;
+                        if (secondsEl) secondsEl.textContent = `${secs}s`;
+                        if (progressBar) {
+                            progressBar.style.width = percentRemaining + '%';
+                            progressBar.setAttribute('aria-valuenow', percentRemaining);
+                        }
+                    }
+                }
+
+                // Update every second
+                setInterval(updateCountdown, 1000);
+            })();
+        </script>
+    }
 }

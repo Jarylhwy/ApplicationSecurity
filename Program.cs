@@ -85,6 +85,9 @@ app.UseSession();
 
 app.UseAuthentication();
 
+// Add password expiration middleware
+app.UseMiddleware<PasswordExpirationMiddleware>();
+
 // Session validation to detect multiple logins
 app.UseMiddleware<SessionValidationMiddleware>();
 

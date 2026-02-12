@@ -6,6 +6,6 @@ appsec hints:
 all the duration things put 1 mins ish
 
 When register account:
-credit card: 4012001037141112
-number: +4488303550
-password: P@ssw0rd1234
+1. credit card: 4012001037141112
+2. number: +4488303550
+3. password: P@ssw0rd1234
